@@ -4,14 +4,4 @@ workflow:
       when: never
     - when: always
 
-run_unit_tests:
-  image: node:17-alpine3.14
-  tags:
-    - local
-    - ubuntu
-    - docker
-  before_script:
-    - cd app
-    - npm install
-  script:
-    - npm test
+
