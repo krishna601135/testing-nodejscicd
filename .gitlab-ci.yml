@@ -9,6 +9,7 @@ run_unit_tests:
   tags:
     - local
     - ubuntu
+    - docker
   before_script:
     - npm install
   script:
