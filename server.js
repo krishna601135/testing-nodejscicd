@@ -8,14 +8,14 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.get('/profile-picture-andrea', function (req, res) {
-  let img = fs.readFileSync(path.join(__dirname, "images/profile-andrea.jpg"));
+app.get('/profile-picture-linux', function (req, res) {
+  let img = fs.readFileSync(path.join(__dirname, "images/Linux-Course.jpg"));
   res.writeHead(200, {'Content-Type': 'image/jpg' });
   res.end(img, 'binary');
 });
 
-app.get('/profile-picture-ari', function (req, res) {
-  let img = fs.readFileSync(path.join(__dirname, "images/profile-ari.jpeg"));
+app.get('/profile-picture-nw', function (req, res) {
+  let img = fs.readFileSync(path.join(__dirname, "images/Network-Course.jpeg"));
   res.writeHead(200, {'Content-Type': 'image/jpg' });
   res.end(img, 'binary');
 });
