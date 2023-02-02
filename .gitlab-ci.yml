@@ -1,16 +1,15 @@
 workflow:
-  rules:
-    - if: $CI_COMMIT_BRANCH != "main" && CI_PIPELINE_SOURCE != "merge_request_event"
+  rules: 
+    - if: $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
       when: never
-    - when: always      
-  
+    - when: always
 
 run_unit_tests:
   image: node:17-alpine3.14
   tags:
-    - docker
-before_script:
-  - npm install
-script:
-  - npm test
-
+    - local
+    - ubuntu
+  before_script:
+    - npm install
+  script:
+    - npm test
