@@ -11,6 +11,7 @@ run_unit_tests:
     - ubuntu
     - docker
   before_script:
+    - cd app
     - npm install
   script:
     - npm test
