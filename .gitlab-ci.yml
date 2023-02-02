@@ -5,3 +5,12 @@ workflow:
     - when: always
 
 
+run_unit_tests:
+  tags:
+    - docker
+    - local
+  before_script:
+    - cd app
+    - npm install
+  script:
+     - npm test
