@@ -4,9 +4,13 @@ workflow:
       when: never
     - when: always
 
+stages:
+  - test
+  - build
 
 run_unit_tests:
   image: node:17-alpine3.14
+  stage: test
   tags:
     - docker
     - local
@@ -21,4 +25,25 @@ run_unit_tests:
        - app/junit.xml
     reports:
       junit: app/junit.xml
+
+build_image:
+  stage: build
+  tags:
+    - docker
+    - local
+  script:
+    - docker build -t registry.gitlab.com/teluguitfactory/nodejs-cicd:1.0 .
+  
+push_image:
+  stage: build
+  needs:
+    - build_image
+  tags:
+    - docker
+    - local
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY  
+  script:
+    - docker push registry.gitlab.com/teluguitfactory/nodejs-cicd:1.0  
+  
  
