@@ -29,8 +29,9 @@ run_unit_tests:
 build_image:
   stage: build
   tags:
-    - docker
-    - local
+    - own
+    - ubuntu
+    - vm
   script:
     - docker build -t registry.gitlab.com/teluguitfactory/nodejs-cicd:1.0 .
   
@@ -39,8 +40,9 @@ push_image:
   needs:
     - build_image
   tags:
-    - docker
-    - local
+    - own
+    - ubuntu
+    - vm
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY  
   script:
