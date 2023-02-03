@@ -27,6 +27,7 @@ run_unit_tests:
       junit: app/junit.xml
 
 build_image:
+  image: node:17-alpine3.14
   stage: build
   tags:
     - docker
@@ -35,6 +36,7 @@ build_image:
     - docker build -t registry.gitlab.com/teluguitfactory/nodejs-cicd:1.0 .
   
 push_image:
+  image: node:17-alpine3.14
   stage: build
   needs:
     - build_image
