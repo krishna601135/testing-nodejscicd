@@ -12,6 +12,7 @@ variables:
 stages:
   - test
   - build
+  - deploy
   
 run_unit_tests:
   image: node:17-alpine3.14
@@ -53,7 +54,7 @@ push_image:
   script:
     - docker push $IMAGE_NAME:$IMAGE_TAG 
   
-deploy_to-Dev:
+deploy_to-dev:
   stage: deploy
   tags:
     - own
