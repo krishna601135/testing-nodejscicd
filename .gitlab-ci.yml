@@ -4,6 +4,10 @@ workflow:
       when: never
     - when: always
 
+variables:
+  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  IMAGE_TAG: "1.1"
+
 stages:
   - test
   - build
@@ -33,7 +37,7 @@ build_image:
     - ubuntu
     - vm
   script:
-    - docker build -t registry.gitlab.com/teluguitfactory/nodejs-cicd:1.0 .
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
   
 push_image:
   stage: build
@@ -46,6 +50,6 @@ push_image:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY  
   script:
-    - docker push registry.gitlab.com/teluguitfactory/nodejs-cicd:1.0  
+    - docker push $IMAGE_NAME:$IMAGE_TAG 
   
  
