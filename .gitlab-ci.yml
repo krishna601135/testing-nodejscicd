@@ -42,7 +42,7 @@ push_image:
     - ubuntu
     - vm
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p CI_REGISTRY_PASSWORD registry.gitlab.com  
+    - docker login -u $CI_REGISTRY_USER --password-stdin CI_REGISTRY_PASSWORD registry.gitlab.com  
   script:
     - docker push registry.gitlab.com/teluguitfactory/nodejs-cicd:1.0
 
