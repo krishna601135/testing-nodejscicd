@@ -67,8 +67,7 @@ deploy_to-dev:
     - ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@$DEV_SERVER "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
         docker run -d -p 3000:3000 $IMAGE_NAME:$IMAGE_TAG"
-
-environment:
-  name: development
-  url: $DEV_ENDPOINT
+  environment:
+    name: development
+    url: $DEV_ENDPOINT
 
