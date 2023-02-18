@@ -61,7 +61,7 @@ deploy_to-dev:
     - ubuntu
     - vm
   before_script:
-    - chmod 400 $SSH_PRIVATE_KEY  
+    - chmod 400 $SSH_PRIVATE_KEY
   script:
     - ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@$DEV_SERVER "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
