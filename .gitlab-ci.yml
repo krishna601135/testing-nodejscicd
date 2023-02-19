@@ -52,7 +52,7 @@ lint_test:
     - cd app
     - npm install
   script:
-    echo: "Cache linit to pull the information"
+    echo "Cache Lint  to pull the information"
 
 build_image:
   stage: build
