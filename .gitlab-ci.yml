@@ -1,23 +1,27 @@
+include:
+  template: Jobs/SAST.gitlab-ci.yml
+
 workflow:
-  rules:
-    - if: $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE != "merge_request_event"      
+  rules: 
+    - if: $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
       when: never
     - when: always
 
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
-  DEV_SERVER_HOST: 3.94.187.176
+  IMAGE_TAG: "1.2"
+  DEV_SERVER: "3.94.187.176"
   DEV_ENDPOINT: http://ec2-3-94-187-176.compute-1.amazonaws.com:3000
-  STAGING_SERVER_HOST: 3.94.187.176
-  STAGING_ENDPOINT: http://ec2-3-94-187-176.compute-1.amazonaws.com:4000
-  PROD_SERVER_HOST: 3.94.187.176
-  PROD_ENDPOINT: http://ec2-3-94-187-176.compute-1.amazonaws.com:5000
+  PREPROD_SERVER: "100.25.109.220"
+  PREPROD_ENDPOINT: http://ec2-100-25-109-220.compute-1.amazonaws.com:3000
+  PROD_SERVER: "100.27.4.246"
+  PROD_ENDPOINT:  http://ec2-100-27-4-246.compute-1.amazonaws.com:3000
 
 stages:
   - test
   - build
   - deploy_dev
-  - deploy_staging
+  - deploy_preprod
   - deploy_prod
   
 run_unit_tests:
@@ -66,36 +70,28 @@ push_image:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY  
   script:
     - docker push $IMAGE_NAME:$IMAGE_TAG 
-    
+
 .deploy:
-  tags: 
+  tags:
     - own
     - ubuntu
     - vm
-  dependencies:
-    - build_image
+  before_script:
+    - echo $SSH_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-key.pem
+    - chmod 400 gitlab-key.pem
   variables:
     SSH_KEY: ""
-    SERVER_HOST: ""
-    DEPLOY_ENV: ""
-    APP_PORT: ""
+    SERVER_HOSTS: ""
     ENDPOINT: ""
-  before_script:
-    - echo $SSH_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > deploy-key.pem
-    - chmod 400 deploy-key.pem
-    - export VERSION=$(cat version-file.txt)
+    DEPLOY_ENV: ""
+
   script:
-    - scp -o StrictHostKeyChecking=no -i deploy-key.pem ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
-    - ssh -o StrictHostKeyChecking=no -i deploy-key.pem ubuntu@$SERVER_HOST "
+    - echo $SSH_KEY 
+    - scp -o StrictHostKeyChecking=no -i gitlab-key.pem ./docker-compose.yaml  ubuntu@$SERVER_HOSTS:/home/ubuntu
+    - ssh -o StrictHostKeyChecking=no -i gitlab-key.pem ubuntu@$SERVER_HOSTS "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
-
-        export COMPOSE_PROJECT_NAME=$DEPLOY_ENV
-        export DC_IMAGE_NAME=$IMAGE_NAME && 
-        export DC_IMAGE_TAG=$VERSION &&
-        export DC_APP_PORT=$APP_PORT
-
-        docker-compose down &&
-        docker-compose up -d"
+        docker-compose -f docker-compose.yaml down &&
+        docker-compose -f docker-compose.yaml up -d"
   environment:
     name: $DEPLOY_ENV
     url: $ENDPOINT
@@ -103,58 +99,35 @@ push_image:
 deploy_to_dev:
   extends: .deploy
   stage: deploy_dev
-  needs: 
-    - build_image
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOST: $DEV_SERVER_HOST
-    DEPLOY_ENV: development
-    APP_PORT: 3000
+    SERVER_HOSTS: $DEV_SERVER
     ENDPOINT: $DEV_ENDPOINT
-
-
-run_functional_tests:
+    DEPLOY_ENV: development   
+  
+functional_test:
   stage: deploy_dev
   needs:
     - deploy_to_dev
   script:
-    - echo "running functional tests"
+    - echo "This is to run functional testing for promoting to Staging."
 
-deploy_to_staging:
+deploy_to_preprod:
   extends: .deploy
-  stage: deploy_staging
-  needs: 
-    - build_image
-    - run_functional_tests
+  stage: deploy_preprod
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOST: $STAGING_SERVER_HOST
-    DEPLOY_ENV: staging
-    APP_PORT: 4000
-    ENDPOINT: $STAGING_ENDPOINT
-
-run_performance_tests:
-  stage: deploy_staging
-  needs:
-    - deploy_to_staging
-  script: 
-    - echo "Running performance tests"
+    SERVER_HOSTS: $PREPROD_SERVER
+    ENDPOINT: $PREPROD_ENDPOINT
+    DEPLOY_ENV: Preprod
 
 deploy_to_prod:
   extends: .deploy
   stage: deploy_prod
-  needs:
-    - build_image
-    - run_performance_tests
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOST: $PROD_SERVER_HOST
-    DEPLOY_ENV: production
-    APP_PORT: 5000
+    SERVER_HOSTS: $PROD_SERVER
     ENDPOINT: $PROD_ENDPOINT
-  when: manual
+    DEPLOY_ENV: Production
 
 
-
-include:
-  - template: Jobs/SAST.gitlab-ci.yml
