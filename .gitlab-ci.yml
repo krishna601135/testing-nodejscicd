@@ -14,12 +14,15 @@ variables:
   DEV_ENDPOINT: http://ec2-3-94-187-176.compute-1.amazonaws.com:3000
   PREPROD_SERVER: "100.25.109.220"
   PREPROD_ENDPOINT: http://ec2-100-25-109-220.compute-1.amazonaws.com:3000
+  PROD_SERVER: "100.27.4.246"
+  PROD_ENDPOINT:  http://ec2-100-27-4-246.compute-1.amazonaws.com:3000
 
 stages:
   - test
   - build
   - deploy_dev
   - deploy_preprod
+  - deploy_prod
   
 run_unit_tests:
   image: node:17-alpine3.14
@@ -74,7 +77,8 @@ push_image:
     - ubuntu
     - vm
   before_script:
-    - chmod 400 $SSH_PRIVATE_KEY
+    - echo $SSH_PRIVATE_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/&\n/" -e "s/\S\{64\}/&\n/g"\ > gitlab-key.pem
+    - chmod 400 gitlab-key.pem
   variables:
     SSH_PRIVATE_KEY: ""
     SERVER_HOSTS: ""
@@ -82,8 +86,8 @@ push_image:
     DEPLOY_ENV: ""
 
   script:
-    - scp -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ./docker-compose.yaml  ubuntu@D$SERVER_HOSTS:/home/ubuntu
-    - ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@$SERVER_HOSTS "
+    - scp -o StrictHostKeyChecking=no -i gitlab-key.pem ./docker-compose.yaml  ubuntu@D$SERVER_HOSTS:/home/ubuntu
+    - ssh -o StrictHostKeyChecking=no -i gitlab-key.pem ubuntu@$SERVER_HOSTS "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
         docker-compose -f docker-compose.yaml down &&
         docker-compose -f docker-compose.yaml up -d"
@@ -115,6 +119,15 @@ deploy_to_preprod:
     SERVER_HOSTS: PREPROD_SERVER
     ENDPOINT: $PREPROD_ENDPOINT
     DEPLOY_ENV: Preprod
+
+deploy_to_prod:
+  extends: .deploy
+  stage: deploy_prod
+  variables:
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
+    SERVER_HOSTS: PROD_SERVER
+    ENDPOINT: $PROD_ENDPOINT
+    DEPLOY_ENV: Production
 
 
 
