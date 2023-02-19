@@ -68,7 +68,7 @@ push_image:
   script:
     - docker push $IMAGE_NAME:$IMAGE_TAG 
   
-deploy_to-dev:
+deploy_to_dev:
   stage: deploy_dev
   tags:
     - own
@@ -90,7 +90,7 @@ deploy_to-dev:
 functional_test:
   stage: deploy_dev
   needs:
-    - deploy_dev
+    - deploy_to_dev
   script:
     - echo "This is to run functional testing for promoting to Staging."
 
