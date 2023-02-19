@@ -94,7 +94,7 @@ functional_test:
   script:
     - echo "This is to run functional testing for promoting to Staging."
 
-deploy_to-PREPROD:
+deploy_to_preprod:
   stage: deploy_preprod
   tags:
     - own
@@ -110,7 +110,7 @@ deploy_to-PREPROD:
         docker-compose -f docker-compose.yaml down &&
         docker-compose -f docker-compose.yaml up -d"
   environment:
-    name: preprod
+    name: Preprod
     url: $PREPROD_ENDPOINT
 
 
