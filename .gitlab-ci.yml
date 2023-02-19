@@ -80,7 +80,7 @@ push_image:
     - echo $SSH_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-key.pem
     - chmod 400 gitlab-key.pem
   variables:
-    SSH_PRIVATE_KEY: ""
+    SSH_KEY: ""
     SERVER_HOSTS: ""
     ENDPOINT: ""
     DEPLOY_ENV: ""
@@ -99,7 +99,7 @@ deploy_to_dev:
   extends: .deploy
   stage: deploy_dev
   variables:
-    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
+    SSH_KEY: $SSH_PRIVATE_KEY
     SERVER_HOSTS: $DEV_SERVER
     ENDPOINT: $DEV_ENDPOINT
     DEPLOY_ENV: development   
@@ -115,7 +115,7 @@ deploy_to_preprod:
   extends: .deploy
   stage: deploy_preprod
   variables:
-    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
+    SSH_KEY: $SSH_PRIVATE_KEY
     SERVER_HOSTS: $PREPROD_SERVER
     ENDPOINT: $PREPROD_ENDPOINT
     DEPLOY_ENV: Preprod
@@ -124,7 +124,7 @@ deploy_to_prod:
   extends: .deploy
   stage: deploy_prod
   variables:
-    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
+    SSH_KEY: $SSH_PRIVATE_KEY
     SERVER_HOSTS: $PROD_SERVER
     ENDPOINT: $PROD_ENDPOINT
     DEPLOY_ENV: Production
