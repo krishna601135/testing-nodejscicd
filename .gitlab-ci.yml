@@ -68,7 +68,7 @@ push_image:
   script:
     - docker push $IMAGE_NAME:$IMAGE_TAG 
 
-deploy:
+.deploy:
   tags:
     - own
     - ubuntu
@@ -92,7 +92,7 @@ deploy:
     url: $DEV_ENDPOINT
 
 deploy_to_dev:
-  extends: deploy
+  extends: .deploy
   stage: deploy_dev
   variables:
     SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
@@ -108,7 +108,7 @@ functional_test:
     - echo "This is to run functional testing for promoting to Staging."
 
 deploy_to_preprod:
-  extends: deploy
+  extends: .deploy
   stage: deploy_preprod
   variables:
     SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
