@@ -1,48 +1,45 @@
-include:
-  template: Jobs/SAST.gitlab-ci.yml
-
 workflow:
-  rules: 
-    - if: $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
+  rules:
+    - if: $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE != "merge_request_event"      
       when: never
     - when: always
 
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
-  IMAGE_TAG: "1.2"
-  DEV_SERVER: "3.94.187.176"
+  DEV_SERVER_HOST: 3.94.187.176
   DEV_ENDPOINT: http://ec2-3-94-187-176.compute-1.amazonaws.com:3000
-  PREPROD_SERVER: "100.25.109.220"
-  PREPROD_ENDPOINT: http://ec2-100-25-109-220.compute-1.amazonaws.com:3000
-  PROD_SERVER: "100.27.4.246"
-  PROD_ENDPOINT:  http://ec2-100-27-4-246.compute-1.amazonaws.com:3000
+  STAGING_SERVER_HOST: 3.94.187.176
+  STAGING_ENDPOINT: http://ec2-3-94-187-176.compute-1.amazonaws.com:4000
+  PROD_SERVER_HOST: 3.94.187.176
+  PROD_ENDPOINT: http://ec2-3-94-187-176.compute-1.amazonaws.com:5000
 
 stages:
   - test
   - build
   - deploy_dev
-  - deploy_preprod
+  - deploy_staging
   - deploy_prod
-  
+
 run_unit_tests:
   image: node:17-alpine3.14
   stage: test
   cache:
-    key: $CI_COMMIT_REF_NAME
+    key: "$CI_COMMIT_REF_NAME"
     paths:
       - app/node_modules
   tags:
+    - ec2
     - docker
-    - local
+    - remote
   before_script:
     - cd app
     - npm install
   script:
-     - npm test
+    - npm test
   artifacts:
     when: always
     paths:
-       - app/junit.xml
+      - app/junit.xml
     reports:
       junit: app/junit.xml
 
@@ -52,46 +49,65 @@ sast:
 build_image:
   stage: build
   tags:
-    - own
-    - ubuntu
-    - vm
+    - ec2
+    - shell
+    - remote
+  before_script:
+    - export PACKAGE_JSON_VERSION=$(cat app/package.json | jq -r .version)
+    - export VERSION=$PACKAGE_JSON_VERSION.$CI_PIPELINE_IID
+    - echo $VERSION > version-file.txt
   script:
-    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
-  
+    - docker build -t $IMAGE_NAME:$VERSION .
+  artifacts:
+    paths:
+      - version-file.txt
+
+
 push_image:
   stage: build
+  dependencies:
+    - build_image
   needs:
     - build_image
   tags:
-    - own
-    - ubuntu
-    - vm
+    - ec2
+    - shell
+    - remote
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY  
+    - export VERSION=$(cat version-file.txt)
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker push $IMAGE_NAME:$IMAGE_TAG 
+    - docker push $IMAGE_NAME:$VERSION
 
 .deploy:
-  tags:
-    - own
-    - ubuntu
-    - vm
-  before_script:
-    - echo $SSH_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-key.pem
-    - chmod 400 gitlab-key.pem
+  tags: 
+    - ec2
+    - shell
+    - remote
+  dependencies:
+    - build_image
   variables:
     SSH_KEY: ""
-    SERVER_HOSTS: ""
-    ENDPOINT: ""
+    SERVER_HOST: ""
     DEPLOY_ENV: ""
-
+    APP_PORT: ""
+    ENDPOINT: ""
+  before_script:
+    - echo $SSH_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > deploy-key.pem
+    - chmod 400 deploy-key.pem
+    - export VERSION=$(cat version-file.txt)
   script:
-    - echo $SSH_KEY 
-    - scp -o StrictHostKeyChecking=no -i gitlab-key.pem ./docker-compose.yaml  ubuntu@$SERVER_HOSTS:/home/ubuntu
-    - ssh -o StrictHostKeyChecking=no -i gitlab-key.pem ubuntu@$SERVER_HOSTS "
+    - scp -o StrictHostKeyChecking=no -i deploy-key.pem ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
+    - ssh -o StrictHostKeyChecking=no -i deploy-key.pem ubuntu@$SERVER_HOST "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
-        docker-compose -f docker-compose.yaml down &&
-        docker-compose -f docker-compose.yaml up -d"
+
+        export COMPOSE_PROJECT_NAME=$DEPLOY_ENV
+        export DC_IMAGE_NAME=$IMAGE_NAME && 
+        export DC_IMAGE_TAG=$VERSION &&
+        export DC_APP_PORT=$APP_PORT
+
+        docker-compose down &&
+        docker-compose up -d"
   environment:
     name: $DEPLOY_ENV
     url: $ENDPOINT
@@ -99,36 +115,58 @@ push_image:
 deploy_to_dev:
   extends: .deploy
   stage: deploy_dev
+  needs: 
+    - build_image
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOSTS: $DEV_SERVER
+    SERVER_HOST: $DEV_SERVER_HOST
+    DEPLOY_ENV: development
+    APP_PORT: 3000
     ENDPOINT: $DEV_ENDPOINT
-    DEPLOY_ENV: development   
-  
-functional_test:
+
+
+run_functional_tests:
   stage: deploy_dev
   needs:
     - deploy_to_dev
   script:
-    - echo "This is to run functional testing for promoting to Staging."
+    - echo "running functional tests"
 
-deploy_to_preprod:
+deploy_to_staging:
   extends: .deploy
-  stage: deploy_preprod
+  stage: deploy_staging
+  needs: 
+    - build_image
+    - run_functional_tests
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOSTS: $PREPROD_SERVER
-    ENDPOINT: $PREPROD_ENDPOINT
-    DEPLOY_ENV: Preprod
+    SERVER_HOST: $STAGING_SERVER_HOST
+    DEPLOY_ENV: staging
+    APP_PORT: 4000
+    ENDPOINT: $STAGING_ENDPOINT
+
+run_performance_tests:
+  stage: deploy_staging
+  needs:
+    - deploy_to_staging
+  script: 
+    - echo "Running performance tests"
 
 deploy_to_prod:
   extends: .deploy
   stage: deploy_prod
+  needs:
+    - build_image
+    - run_performance_tests
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOSTS: $PROD_SERVER
+    SERVER_HOST: $PROD_SERVER_HOST
+    DEPLOY_ENV: production
+    APP_PORT: 5000
     ENDPOINT: $PROD_ENDPOINT
-    DEPLOY_ENV: Production
+  when: manual
 
 
 
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
