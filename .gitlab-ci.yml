@@ -86,7 +86,6 @@ push_image:
   before_script:
     - echo $SSH_PRIVATE_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-ci.pem
     - chmod 400 gitlab-ci.pem
-    - ssh-add "$SSH_PRIVATE_KEY"
   script:
     - scp -o StrictHostKeyChecking=no -i gitlab-ci.pem ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
     - ssh -o StrictHostKeyChecking=no -i gitlab-ci.pem ubuntu@$SERVER_HOST "
