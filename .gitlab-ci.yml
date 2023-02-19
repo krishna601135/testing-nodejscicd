@@ -18,6 +18,10 @@ stages:
 run_unit_tests:
   image: node:17-alpine3.14
   stage: test
+  cache:
+    key: $CI_COMMIT_REF_NAME
+    paths:
+      - app/node_modules
   tags:
     - docker
     - local
@@ -32,6 +36,23 @@ run_unit_tests:
        - app/junit.xml
     reports:
       junit: app/junit.xml
+
+lint_test:
+  image: node:17-alpine3.14
+  stage: test
+  cache:
+    key: $CI_COMMIT_REF_NAME
+    paths:
+      - app/node_modules
+    policy: pull
+  tags:
+    - docker
+    - local
+  before_script:
+    - cd app
+    - npm install
+  script:
+    echo: "Cache linit to pull the information"
 
 build_image:
   stage: build
