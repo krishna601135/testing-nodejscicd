@@ -17,28 +17,28 @@ stages:
   - test
   - build
   - deploy_dev
-  - deploy_staging
+  - deploy_preprod
   - deploy_prod
-
+  
 run_unit_tests:
   image: node:17-alpine3.14
   stage: test
   cache:
-    key: "$CI_COMMIT_REF_NAME"
+    key: $CI_COMMIT_REF_NAME
     paths:
       - app/node_modules
   tags:
-    - local
     - docker
+    - local
   before_script:
     - cd app
     - npm install
   script:
-    - npm test
+     - npm test
   artifacts:
     when: always
     paths:
-      - app/junit.xml
+       - app/junit.xml
     reports:
       junit: app/junit.xml
 
@@ -53,11 +53,9 @@ build_image:
     - vm
   script:
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
-
+  
 push_image:
   stage: build
-  dependencies:
-    - build_image
   needs:
     - build_image
   tags:
@@ -65,10 +63,10 @@ push_image:
     - ubuntu
     - vm
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY  
   script:
-    - docker push $IMAGE_NAME:$IMAGE_TAG
-
+    - docker push $IMAGE_NAME:$IMAGE_TAG 
+    
 .deploy:
   tags: 
     - own
