@@ -72,36 +72,37 @@ push_image:
     - docker push $IMAGE_NAME:$IMAGE_TAG 
 
 .deploy:
-  tags:
+  tags: 
     - own
     - ubuntu
     - vm
-  before_script:
-    - echo $SSH_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-key.pem
-    - chmod 400 gitlab-key.pem
+  dependencies:
+    - build_image
   variables:
     SSH_KEY: ""
-    SERVER_HOSTS: ""
-    ENDPOINT: ""
+    SERVER_HOST: ""
     DEPLOY_ENV: ""
-
+    ENDPOINT: ""
+  before_script:
+    - echo $SSH_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-ci.pem
+    - chmod 400 gitlab-ci.pem
   script:
-    - echo $SSH_KEY 
-    - scp -o StrictHostKeyChecking=no -i gitlab-key.pem ./docker-compose.yaml  ubuntu@$SERVER_HOSTS:/home/ubuntu
-    - ssh -o StrictHostKeyChecking=no -i gitlab-key.pem ubuntu@$SERVER_HOSTS "
+    - scp -o StrictHostKeyChecking=no -i gitlab-ci.pem ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
+    - ssh -o StrictHostKeyChecking=no -i gitlab-ci.pem ubuntu@$SERVER_HOST "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
-        docker-compose -f docker-compose.yaml down &&
-        docker-compose -f docker-compose.yaml up -d"
+        docker-compose down &&
+        docker-compose up -d"
   environment:
     name: $DEPLOY_ENV
     url: $ENDPOINT
+
 
 deploy_to_dev:
   extends: .deploy
   stage: deploy_dev
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOSTS: $DEV_SERVER
+    SERVER_HOST: $DEV_SERVER
     ENDPOINT: $DEV_ENDPOINT
     DEPLOY_ENV: development   
   
@@ -117,7 +118,7 @@ deploy_to_preprod:
   stage: deploy_preprod
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOSTS: $PREPROD_SERVER
+    SERVER_HOST: $PREPROD_SERVER
     ENDPOINT: $PREPROD_ENDPOINT
     DEPLOY_ENV: Preprod
 
@@ -126,7 +127,7 @@ deploy_to_prod:
   stage: deploy_prod
   variables:
     SSH_KEY: $SSH_PRIVATE_KEY
-    SERVER_HOSTS: $PROD_SERVER
+    SERVER_HOST: $PROD_SERVER
     ENDPOINT: $PROD_ENDPOINT
     DEPLOY_ENV: Production
 
