@@ -7,8 +7,8 @@ workflow:
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: "1.2"
-  DEV_SERVER: "54.236.16.105"
-  DEV_ENDPOINT: http://ec2-54-236-16-105.compute-1.amazonaws.com:3000
+  DEV_SERVER: "54.162.231.40"
+  DEV_ENDPOINT: http://ec2-54-162-231-40.compute-1.amazonaws.com:3000
 
 stages:
   - test
