@@ -51,16 +51,8 @@ build_image:
     - own
     - ubuntu
     - vm
-  before_script:
-    - export PACKAGE_JSON_VERSION=$(cat app/package.json | jq -r .version)
-    - export VERSION=$PACKAGE_JSON_VERSION.$CI_PIPELINE_IID
-    - echo $VERSION > version-file.txt
   script:
-    - docker build -t $IMAGE_NAME:$VERSION .
-  artifacts:
-    paths:
-      - version-file.txt
-
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
 push_image:
   stage: build
@@ -73,10 +65,9 @@ push_image:
     - ubuntu
     - vm
   before_script:
-    - export VERSION=$(cat version-file.txt)
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker push $IMAGE_NAME:$VERSION
+    - docker push $IMAGE_NAME:$IMAGE_TAG
 
 .deploy:
   tags: 
