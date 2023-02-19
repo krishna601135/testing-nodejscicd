@@ -17,7 +17,7 @@ stages:
   - test
   - build
   - deploy_dev
-  - deploy_preprod
+  - deploy_staging
   - deploy_prod
   
 run_unit_tests:
