@@ -37,23 +37,6 @@ run_unit_tests:
     reports:
       junit: app/junit.xml
 
-lint_test:
-  image: node:17-alpine3.14
-  stage: test
-  cache:
-    key: $CI_COMMIT_REF_NAME
-    paths:
-      - app/node_modules
-    policy: pull
-  tags:
-    - docker
-    - local
-  before_script:
-    - cd app
-    - npm install
-  script:
-    echo "Cache Lint  to pull the information"
-
 build_image:
   stage: build
   tags:
