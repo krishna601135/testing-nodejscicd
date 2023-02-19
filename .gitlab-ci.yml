@@ -79,13 +79,14 @@ push_image:
   dependencies:
     - build_image
   variables:
-    SSH_KEY: ""
+    SSH_PRIVATE_KEY: ""
     SERVER_HOST: ""
     DEPLOY_ENV: ""
     ENDPOINT: ""
   before_script:
-    - echo $SSH_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-ci.pem
+    - echo $SSH_PRIVATE_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-ci.pem
     - chmod 400 gitlab-ci.pem
+    - ssh-add "$SSH_PRIVATE_KEY"
   script:
     - scp -o StrictHostKeyChecking=no -i gitlab-ci.pem ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
     - ssh -o StrictHostKeyChecking=no -i gitlab-ci.pem ubuntu@$SERVER_HOST "
@@ -101,7 +102,7 @@ deploy_to_dev:
   extends: .deploy
   stage: deploy_dev
   variables:
-    SSH_KEY: $SSH_PRIVATE_KEY
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
     SERVER_HOST: $DEV_SERVER
     ENDPOINT: $DEV_ENDPOINT
     DEPLOY_ENV: development   
@@ -117,7 +118,7 @@ deploy_to_preprod:
   extends: .deploy
   stage: deploy_preprod
   variables:
-    SSH_KEY: $SSH_PRIVATE_KEY
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
     SERVER_HOST: $PREPROD_SERVER
     ENDPOINT: $PREPROD_ENDPOINT
     DEPLOY_ENV: Preprod
@@ -126,7 +127,7 @@ deploy_to_prod:
   extends: .deploy
   stage: deploy_prod
   variables:
-    SSH_KEY: $SSH_PRIVATE_KEY
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY
     SERVER_HOST: $PROD_SERVER
     ENDPOINT: $PROD_ENDPOINT
     DEPLOY_ENV: Production
