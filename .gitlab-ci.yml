@@ -1,3 +1,6 @@
+include:
+  template: Jobs/SAST.gitlab-ci.yml
+
 workflow:
   rules: 
     - if: $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
@@ -36,6 +39,9 @@ run_unit_tests:
        - app/junit.xml
     reports:
       junit: app/junit.xml
+
+sast:
+  stage: test
 
 build_image:
   stage: build
@@ -77,4 +83,8 @@ deploy_to-dev:
   environment:
     name: development
     url: $DEV_ENDPOINT
+
+
+
+
 
