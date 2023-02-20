@@ -74,8 +74,8 @@ push_image:
 .deploy:
   image: alpine
   tags: 
-    - docker
-    - local
+    - ubuntu
+    - vm
   dependencies:
     - build_image
   variables:
@@ -84,11 +84,14 @@ push_image:
     DEPLOY_ENV: ""
     ENDPOINT: ""
   before_script:
-    - apk add openssh-client
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client git -y )'
     - eval $(ssh-agent -s)
     - echo "${SSH_PRIVATE_KEY}" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
+    - ssh-keyscan 3.94.187.176 >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+
 
   script:
     - scp -o StrictHostKeyChecking=no -i gitlab-ci.pem ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
