@@ -72,10 +72,10 @@ push_image:
     - docker push $IMAGE_NAME:$IMAGE_TAG 
 
 .deploy:
+  image: alpine
   tags: 
-    - own
-    - ubuntu
-    - vm
+    - docker
+    - local
   dependencies:
     - build_image
   variables:
@@ -84,8 +84,12 @@ push_image:
     DEPLOY_ENV: ""
     ENDPOINT: ""
   before_script:
-    - echo $SSH_PRIVATE_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-ci.pem
-    - chmod 400 gitlab-ci.pem
+    - apk add openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+
   script:
     - scp -o StrictHostKeyChecking=no -i gitlab-ci.pem ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
     - ssh -o StrictHostKeyChecking=no -i gitlab-ci.pem ubuntu@$SERVER_HOST "
