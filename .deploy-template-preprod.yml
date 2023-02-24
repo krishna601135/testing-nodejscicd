@@ -1,3 +1,4 @@
+deploy_to_preprod:
   stage: deploy_preprod
   before_script: 
     - chmod 400 $SSH_PRIVATE_KEY
