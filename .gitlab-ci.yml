@@ -10,12 +10,12 @@ workflow:
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: "1.2"
-  DEV_SERVER: "3.94.187.176"
-  DEV_ENDPOINT: http://ec2-3-94-187-176.compute-1.amazonaws.com:3000
-  PREPROD_SERVER: "100.25.109.220"
-  PREPROD_ENDPOINT: http://ec2-100-25-109-220.compute-1.amazonaws.com:3000
-  PROD_SERVER: "100.27.4.246"
-  PROD_ENDPOINT:  http://ec2-100-27-4-246.compute-1.amazonaws.com:3000
+  DEV_SERVER: "3.86.212.191"
+  DEV_ENDPOINT: http://ec2-3-86-212-191.compute-1.amazonaws.com:3000
+  PREPROD_SERVER: "54.87.169.215"
+  PREPROD_ENDPOINT: http://ec2-54-87-169-215.compute-1.amazonaws.com:3000
+  PROD_SERVER: "100.26.219.16"
+  PROD_ENDPOINT:  http://ec2-100-26-219-16.compute-1.amazonaws.com.com:3000
 
 stages:
   - test
