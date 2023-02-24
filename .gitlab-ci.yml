@@ -85,7 +85,7 @@ deploy_to_dev:
         docker-compose down &&
         docker-compose up -d"
   environment:
-    name: $DEPLOY_ENV
+    name: Development
     url: $DEV_ENDPOINT
   
 functional_test:
@@ -109,7 +109,7 @@ deploy_to_preprod:
         docker-compose down &&
         docker-compose up -d"
   environment:
-    name: $DEPLOY_ENV
+    name: PreProdcution
     url: $PREPROD_ENDPOINT
 
 
