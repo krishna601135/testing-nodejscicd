@@ -83,13 +83,22 @@ push_image:
     SERVER_HOST: ""
     DEPLOY_ENV: ""
     ENDPOINT: ""
-  before_script:
-    - echo $SSH_PRIVATE_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY-----/\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-ci.pem
-    - chmod 400 gitlab-ci.pem
-
+  before_script: 
+    - command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $SERVER_HOST >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+#    - echo $SSH_PRIVATE_KEY | sed -e "s/-----BEGIN RSA PRIVATE KEY-----/&\n/" -e "s/-----END RSA PRIVATE KEY----- /\n&/" -e "s/\S\{64\}/&\n/g"\ > gitlab-ci.pem
+   
   script:
-    - scp -o StrictHostKeyChecking=no -i gitlab-ci.pem ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
-    - ssh -o StrictHostKeyChecking=no -i gitlab-ci.pem ubuntu@$SERVER_HOST "
+    - cp -r * .public
+    - mv .public public
+    - zip -r public.zip public
+    - scp -o StrictHostKeyChecking=no public.zip ./docker-compose.yaml ubuntu@$SERVER_HOST:/home/ubuntu
+    - ssh -o StrictHostKeyChecking=no ubuntu@$SERVER_HOST "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
         docker-compose down &&
         docker-compose up -d"
