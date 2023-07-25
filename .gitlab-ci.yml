@@ -3,8 +3,12 @@ workflow:
     - if: $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
       when: never
     - when: always
+stages:
+  - test
+  - build
 
 run_unit_tests:
+  stage: test
   image: node:17-alpine3.14
   tags:
     - docker2
@@ -23,12 +27,16 @@ run_unit_tests:
       junit: app/junit.xml
   
 build_image:
+  stage: build
   tags:
     - shell
   script: 
     - docker build -t registry.gitlab.com/testing7394721/nodejscicd:1.0 .
 
 push_image:
+  stage: build
+  needs:
+    - build_image
   tags:
     - shell
   before_script:
