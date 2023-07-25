@@ -57,7 +57,7 @@ deploy_to_dev:
     - chmod 400 $SSH_PRIVATE_KEY
   script:
     - ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@52.201.238.5 "
-        docker login -u $CI_REGISTRY_USER -P $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
         docker run -d -p 3000:3000 $IMAGE_NAME:$IMAGE_TAG"
 
 
