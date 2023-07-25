@@ -10,12 +10,13 @@ variables:
 stages:
   - test
   - build
+  - deploy
 
 run_unit_tests:
   stage: test
   image: node:17-alpine3.14
   tags:
-    - docker2
+    - docker3
   
   before_script:
     - cd app
@@ -33,8 +34,8 @@ run_unit_tests:
 build_image:
   stage: build
   tags:
-    - shell
-  script: 
+    - shell2
+  script:
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
 push_image:
@@ -42,13 +43,22 @@ push_image:
   needs:
     - build_image
   tags:
-    - shell
+    - shell1
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker push $IMAGE_NAME:$IMAGE_TAG
 
-
+deploy_to_dev:
+  stage: deploy
+  tags:
+    - shell1
+  before_script:
+    - chmod 400 $SSH_PRIVATE_KEY
+  script:
+    - ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@52.201.238.5 "
+        docker login -u $CI_REGISTRY_USER -P $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+        docker run -d -p 3000:3000 $IMAGE_NAME:$IMAGE_TAG"
 
 
 
