@@ -52,7 +52,7 @@ push_image:
 deploy_to_dev:
   stage: deploy
   tags:
-    - shell1
+    - docker222
   before_script:
     - chmod 400 $SSH_PRIVATE_KEY
   script:
