@@ -6,6 +6,8 @@ workflow:
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: "2.0"
+  DEV_ENDPOINT: http://ec2-3-86-186-17.compute-1.amazonaws.com:3000
+
 
 stages:
   - test
@@ -16,7 +18,7 @@ run_unit_tests:
   stage: test
   image: node:17-alpine3.14
   tags:
-    - shell222
+    - docker786
   
   before_script:
     - cd app
@@ -34,7 +36,7 @@ run_unit_tests:
 build_image:
   stage: build
   tags:
-    - docker222
+    - shell786
   script:
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
@@ -43,7 +45,7 @@ push_image:
   needs:
     - build_image
   tags:
-    - docker222
+    - shell786
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -52,13 +54,20 @@ push_image:
 deploy_to_dev:
   stage: deploy
   tags:
-    - docker222
+    - shell786
   before_script:
     - chmod 400 $SSH_PRIVATE_KEY
   script:
-    - ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@52.201.238.5 "
+    - ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY ubuntu@3.86.186.17 "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
         docker run -d -p 3000:3000 $IMAGE_NAME:$IMAGE_TAG"
+  
+  environment:
+    name: Development
+    url: $DEV_ENDPOINT
+
+  
+
 
 
 
