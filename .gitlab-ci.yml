@@ -53,6 +53,9 @@ run_lint_checks:
   script:
     - echo "Running lint checks"
 
+sast:
+  stage: test
+  
 build_image:
   stage: build
   tags:
