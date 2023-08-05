@@ -73,7 +73,6 @@ push_image:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     - docker push $IMAGE_NAME:$IMAGE_TAG
-
 deploy_to_dev:
   stage: deploy
   tags:
