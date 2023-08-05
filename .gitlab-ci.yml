@@ -17,8 +17,13 @@ stages:
 run_unit_tests:
   stage: test
   image: node:17-alpine3.14
+  cache:
+    key: $CI_COMMIT_REF_NAME
+  paths:
+    - app/node_modules/
+
   tags:
-    - docker786
+    - docker788
   
   before_script:
     - cd app
@@ -32,11 +37,26 @@ run_unit_tests:
        - app/junit.xml
     reports:
       junit: app/junit.xml
-  
+
+run_lint_checks:
+  stage: test
+  tags:
+    - docker788
+  cache:
+    key: $CI_COMMIT_REF_NAME
+    paths:
+      - app/node_modules/
+    policy: pull
+  before_script:
+    - cd app
+    - npm install
+  script:
+    - echo "Running lint checks"
+
 build_image:
   stage: build
   tags:
-    - shell786
+    - shell788
   script:
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
@@ -45,7 +65,7 @@ push_image:
   needs:
     - build_image
   tags:
-    - shell786
+    - shell788
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -54,7 +74,7 @@ push_image:
 deploy_to_dev:
   stage: deploy
   tags:
-    - shell786
+    - shell788
   before_script:
     - chmod 400 $SSH_PRIVATE_KEY
   script:
