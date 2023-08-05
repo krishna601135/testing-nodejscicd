@@ -19,8 +19,8 @@ run_unit_tests:
   image: node:17-alpine3.14
   cache:
     key: $CI_COMMIT_REF_NAME
-  paths:
-    - app/node_modules/
+    paths:
+      - app/node_modules/
 
   tags:
     - docker788
