@@ -64,7 +64,6 @@ run_lint_checks:
     - npm install
   script:
     - echo "Running lint checks"
-
 sast:
   stage: test
   
