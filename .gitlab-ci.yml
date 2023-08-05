@@ -24,7 +24,9 @@ variables:
 stages:
   - test
   - build
-  - deploy
+  - deploy_dev
+  - deploy_preprod
+  - deploy_prod
 
 run_unit_tests:
   stage: test
