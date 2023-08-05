@@ -33,6 +33,7 @@ run_unit_tests:
 
 run_lint_checks:
   stage: test
+  image: node:17-alpine3.14
   tags:
     - docker788
   before_script:
