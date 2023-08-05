@@ -1,3 +1,6 @@
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+
 workflow:
   rules: 
     - if: $CI_COMMIT_BRANCH != "main" && $CI_PIPELINE_SOURCE != "merge_request_event"
@@ -7,7 +10,6 @@ variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: "2.0"
   DEV_ENDPOINT: http://ec2-3-84-19-58.compute-1.amazonaws.com:3000
-
 
 stages:
   - test
@@ -22,7 +24,7 @@ run_unit_tests:
     paths:
       - app/node_modules/
   tags:
-    - docker788 
+    - docker799 
   before_script:
     - cd app
     - npm install
@@ -44,7 +46,7 @@ run_lint_checks:
       - app/node_modules/
     policy: pull
   tags:
-    - docker788
+    - docker799
   before_script:
     - cd app
     - npm install
@@ -54,7 +56,7 @@ run_lint_checks:
 build_image:
   stage: build
   tags:
-    - shell788
+    - shell799
   script:
     - docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
@@ -63,7 +65,7 @@ push_image:
   needs:
     - build_image
   tags:
-    - shell788
+    - shell799
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -72,7 +74,7 @@ push_image:
 deploy_to_dev:
   stage: deploy
   tags:
-    - shell788
+    - shell799
   before_script:
     - chmod 400 $SSH_PRIVATE_KEY
   script:
